@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boston Sports Tracker</title>
+    <link rel="manifest" href="/manifest.json">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="theme-color" content="#0f172a">
+
+  <style>
+    :root {
+      --bg: #0f172a;
+      --card-bg: #1e293b;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-red: #ba0c2f;
+      --accent-green: #007a33;
+      --accent-gold: #ffb81c;
+      --accent-blue: #38bdf8;
+      --pill-bg: #334155;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg);
+      color: var(--text);
+      display: flex;
+      justify-content: center;
+      min-height: 100vh;
+      padding: 16px;
+    }
+
+    .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
+    header { padding-top: 8px; }
+    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+    #view-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+
+    .filter-bar {
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+      padding-bottom: 4px;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: none;
+    }
+    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-btn {
+      flex: 0 0 auto;
+      background-color: var(--pill-bg);
+      color: var(--text);
+      border: 1px solid transparent;
+      padding: 8px 14px;
+      border-radius: 9999px;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background-color 0.15s ease;
+    }
+    .filter-btn.active { background-color: #38bdf8; color: #0f172a; }
+
+    #schedule-container { display: flex; flex-direction: column; gap: 12px; }
+
+    .card {
+      background-color: var(--card-bg);
+      border: 1px solid #334155;
+      border-radius: 12px;
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .card-header { display: flex; justify-content: space-between; align-items: center; }
+    .team-name { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
+    .matchup { font-size: 1.05rem; font-weight: 600; }
+    .game-time { font-size: 0.85rem; color: var(--text-muted); }
+
+    /* Broadcast Network Badges */
+    .broadcast-container {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-top: 4px;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 3px 8px;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 9999px;
+      color: #ffffff;
+      background-color: #4b5563;
+      vertical-align: middle;
+    }
+
+    .badge-nesn {
+      background-color: #b91c1c;
+      color: #ffffff;
+    }
+
+    .badge-nbcsb {
+      background-color: #047857;
+      color: #ffffff;
+    }
+
+    .badge-peacock {
+      background-color: #0284c7;
+      color: #ffffff;
+    }
+
+    .badge-espn {
+      background-color: #dc2626;
+      color: #ffffff;
+    }
+
+    .badge-cbs {
+      background-color: #1d4ed8;
+      color: #ffffff;
+    }
+
+    .badge-tbd {
+      background-color: #6b7280;
+      color: #f3f4f6;
+    }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <header>
+      <h1>Boston Sports Tracker</h1>
+      <p id="view-subtitle">Next 7 Days — All Teams</p>
+    </header>
+
+    <nav class="filter-bar" aria-label="Team Filters">
+      <button class="filter-btn active" data-team="All">All (7 Days)</button>
+      <button class="filter-btn" data-team="Red Sox">Red Sox</button>
+      <button class="filter-btn" data-team="Celtics">Celtics</button>
+      <button class="filter-btn" data-team="Bruins">Bruins</button>
+      <button class="filter-btn" data-team="Patriots">Patriots</button>
+    </nav>
+
+    <main id="schedule-container">
+      <div class="card">
+        <div class="matchup">Loading schedules...</div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    const container = document.getElementById('schedule-container');
+    const subtitle = document.getElementById('view-subtitle');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    let teamsPayload = [];
+
+    function formatGameDate(dateStr) {
+      if (!dateStr) return 'Date TBD';
+      const d = new Date(dateStr);
+      return d.toLocaleDateString('en-US', {
+        weekday: 'short', month: 'short', day: 'numeric',
+        hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
+      });
+    }
+
+    function getTeamColor(teamName) {
+      switch(teamName) {
+        case 'Red Sox': return 'var(--accent-red)';
+        case 'Celtics': return 'var(--accent-green)';
+        case 'Bruins': return 'var(--accent-gold)';
+        case 'Patriots': return 'var(--accent-blue)';
+        default: return 'var(--text)';
+      }
+    }
+
+    function getBadgeClass(channel) {
+      if (!channel) return 'badge-tbd';
+      const c = channel.toUpperCase();
+      if (c.includes('NESN')) return 'badge-nesn';
+      if (c.includes('NBC SPORTS') || c.includes('NBCSB')) return 'badge-nbcsb';
+      if (c.includes('PEACOCK') || c.includes('NBC')) return 'badge-peacock';
+      if (c.includes('ESPN')) return 'badge-espn';
+      if (c.includes('CBS')) return 'badge-cbs';
+      return 'badge-tbd';
+    }
+
+    function renderView(teamFilter = 'All') {
+      let displayGames = [];
+      const now = new Date();
+      const startOfToday = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+
+      const isUpcoming = (game) => {
+        if (!game || !game.date) return false;
+        return new Date(game.date) >= startOfToday;
+      };
+
+      if (teamFilter === 'All') {
+        subtitle.textContent = 'Next 7 Days — All Teams';
+        const sevenDaysOut = new Date(startOfToday.getTime() + (7 * 24 * 60 * 60 * 1000));
+
+        const allGames = teamsPayload.flatMap(t => {
+          if (Array.isArray(t.games)) return t.games;
+          if (t.gameName) return [t];
+          return [];
+        });
+
+        displayGames = allGames
+          .filter(g => {
+            if (!g.date) return false;
+            const gameDate = new Date(g.date);
+            return gameDate >= startOfToday && gameDate <= sevenDaysOut;
+          })
+          .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+        if (displayGames.length === 0) {
+          subtitle.textContent = 'Upcoming Matchups — All Teams';
+          displayGames = teamsPayload
+            .map(t => {
+              const list = Array.isArray(t.games) ? t.games : (t.gameName ? [t] : []);
+              return list.find(isUpcoming) || null;
+            })
+            .filter(Boolean)
+            .sort((a, b) => new Date(a.date) - new Date(b.date));
+        }
+
+      } else {
+        subtitle.textContent = `Next 3 Games — ${teamFilter}`;
+        const teamObj = teamsPayload.find(t => t.team === teamFilter);
+        if (teamObj) {
+          const list = Array.isArray(teamObj.games) ? teamObj.games : (teamObj.gameName ? [teamObj] : []);
+          displayGames = list.filter(isUpcoming).slice(0, 3);
+        }
+      }
+
+      if (!displayGames || displayGames.length === 0) {
+        subtitle.textContent = teamFilter === 'All' ? 'Schedule Overview' : `${teamFilter} — Off-Season`;
+        container.innerHTML = `
+          <div class="card" style="text-align: center; padding: 28px 16px;">
+            <div style="font-size: 1.75rem; margin-bottom: 8px;">⚾ ❄️</div>
+            <div class="matchup" style="color: var(--text-muted); font-size: 1rem;">
+              ${teamFilter === 'All' ? 'No games scheduled for this week' : `${teamFilter} are currently in the off-season`}
+            </div>
+            <div class="game-time" style="margin-top: 6px;">
+              Check back closer to spring training and regular season announcements.
+            </div>
+          </div>`;
+        return;
+      }
+
+      container.innerHTML = displayGames.map(game => {
+        const channelName = game.broadcast || 'TBD';
+        const badgeClass = getBadgeClass(channelName);
+
+        return `
+          <div class="card">
+            <div class="card-header">
+              <span class="team-name" style="color: ${getTeamColor(game.team)}">${game.team}</span>
+              <span class="game-time">${formatGameDate(game.date)}</span>
+            </div>
+            <div class="matchup">${game.gameName}</div>
+            <div class="broadcast-container">
+              <span class="badge ${badgeClass}">${channelName}</span>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    async function loadSchedule() {
+      try {
+        const res = await fetch('/api/games');
+        teamsPayload = await res.json();
+        renderView('All');
+      } catch (err) {
+        container.innerHTML = `
+          <div class="card">
+            <div class="matchup" style="color: #ef4444;">Failed to load schedule</div>
+            <div class="game-time">${err.message}</div>
+          </div>`;
+      }
+    }
+
+    filterButtons.forEach(btn => {
+      btn.addEventListener('click', () => {
+        filterButtons.forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderView(btn.dataset.team);
+      });
+    });
+
+    loadSchedule();
+        // Register Service Worker for PWA shell caching
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js')
+          .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
+          .catch((err) => console.warn('Service Worker registration failed:', err));
+      });
+    }
+
+  </script>
+</body>
+</html>

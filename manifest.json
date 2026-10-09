@@ -1,0 +1,17 @@
+{
+  "name": "Boston Sports Tracker",
+  "short_name": "Boston Sports",
+  "description": "Live broadcast schedule tracker for Red Sox, Celtics, Bruins, and Patriots.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#0f172a",
+  "theme_color": "#0f172a",
+  "icons": [
+    {
+      "src": "data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>🏆</text></svg>",
+      "sizes": "192x192 512x512",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}

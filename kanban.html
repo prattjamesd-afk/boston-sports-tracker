@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Boston Sports Tracker — Kanban</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+  <script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+  <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div id="root"></div>
+  <script type="text/babel">
+    const { useState, useEffect } = React;
+    const INITIAL_COLUMNS = [
+      { id: 'done', title: 'Done', limit: null, badge: 'bg-emerald-500/10 text-emerald-400 border-emerald-500/30' },
+      { id: 'in_progress', title: 'In Progress', limit: 2, badge: 'bg-amber-500/10 text-amber-400 border-amber-500/30' },
+      { id: 'review', title: 'Testing / QA', limit: 2, badge: 'bg-purple-500/10 text-purple-400 border-purple-500/30' },
+      { id: 'todo', title: 'Next Up (To Do)', limit: 4, badge: 'bg-blue-500/10 text-blue-400 border-blue-500/30' },
+      { id: 'backlog', title: 'Backlog', limit: null, badge: 'bg-slate-500/10 text-slate-400 border-slate-500/30' },
+    ];
+    const INITIAL_TASKS = [
+      { id: 'T-1', columnId: 'done', code: 'TASK-01', title: 'Local Workspace Setup', desc: 'Initialize local boston-sports-tracker folder and trust workspace in VS Code.', phase: 'Phase 1', priority: 'High' },
+      { id: 'T-2', columnId: 'done', code: 'TASK-02', title: 'Project Initialization', desc: 'Run npm init -y and configure package.json dependencies.', phase: 'Phase 1', priority: 'High' },
+      { id: 'T-3', columnId: 'done', code: 'TASK-03', title: 'Scaffold /api/games.js', desc: 'Scaffold endpoint with verified ESPN IDs: Sox (2), Celtics (2), Bruins (1), Pats (17).', phase: 'Phase 1', priority: 'Urgent' },
+      { id: 'T-4', columnId: 'done', code: 'TASK-04', title: 'Concurrent Fetch & Edge Caching', desc: 'Implement Promise.all loop with s-maxage=300 and stale-while-revalidate=3600.', phase: 'Phase 1', priority: 'High' },
+      { id: 'T-5', columnId: 'in_progress', code: 'TASK-05', title: 'Defensive Broadcast Parsing', desc: 'Extract broadcasts[].names (NESN, NBCSB, National) with safe "TBD" fallback.', phase: 'Phase 2', priority: 'Urgent' },
+      { id: 'T-6', columnId: 'in_progress', code: 'TASK-06', title: 'Terminal Validation Script', desc: 'Run test-espn.js to verify clean 4-team JSON without breaking on null/empty fields.', phase: 'Phase 3', priority: 'High' },
+      { id: 'T-7', columnId: 'todo', code: 'TASK-07', title: 'Schedule Card UI & Filters', desc: 'Build responsive schedule card layout with team selector buttons.', phase: 'Phase 4', priority: 'Medium' },
+      { id: 'T-8', columnId: 'todo', code: 'TASK-08', title: 'High-Contrast Broadcast Badges', desc: 'Implement custom badges for NESN, NBC Sports Boston, and national channels.', phase: 'Phase 4', priority: 'Medium' },
+      { id: 'T-9', columnId: 'todo', code: 'TASK-09', title: 'Off-Season Empty States', desc: 'Handle no-game intervals and post-season off-period UI states gracefully.', phase: 'Phase 4', priority: 'Low' },
+      { id: 'T-10', columnId: 'backlog', code: 'TASK-10', title: 'PWA Web App Manifest', desc: 'Create manifest.json with app icons, theme colors, and standalone display mode.', phase: 'Phase 5', priority: 'Medium' },
+      { id: 'T-11', columnId: 'backlog', code: 'TASK-11', title: 'Service Worker Shell', desc: 'Register lightweight service worker for offline shell caching and cold-start speed.', phase: 'Phase 5', priority: 'Low' },
+      { id: 'T-12', columnId: 'backlog', code: 'TASK-12', title: 'GitHub & Vercel Deployment', desc: 'Link repository to Vercel for continuous deployment on Git push.', phase: 'Phase 6', priority: 'High' }
+    ];
+    function App() {
+      const [tasks, setTasks] = useState(() => {
+        const saved = localStorage.getItem('bst_kanban_tasks');
+        return saved ? JSON.parse(saved) : INITIAL_TASKS;
+      });
+      const [copied, setCopied] = useState(false);
+      const [draggedId, setDraggedId] = useState(null);
+      useEffect(() => { localStorage.setItem('bst_kanban_tasks', JSON.stringify(tasks)); }, [tasks]);
+      const handleDrop = (targetColId) => {
+        if (!draggedId) return;
+        const targetCol = INITIAL_COLUMNS.find(c => c.id === targetColId);
+        if (targetCol?.limit) {
+          const count = tasks.filter(t => t.columnId === targetColId && t.id !== draggedId).length;
+          if (count >= targetCol.limit) {
+            alert(`WIP Limit Reached! "${targetCol.title}" is capped at ${targetCol.limit} concurrent tasks.`);
+            setDraggedId(null);
+            return;
+          }
+        }
+        setTasks(prev => prev.map(t => t.id === draggedId ? { ...t, columnId: targetColId } : t));
+        setDraggedId(null);
+      };
+      const copySnapshot = async () => {
+        const timestamp = new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' });
+        let md = `# Boston Sports Tracker — Kanban Status Snapshot\n**Generated:** ${timestamp}\n\n`;
+        INITIAL_COLUMNS.forEach(col => {
+          const colTasks = tasks.filter(t => t.columnId === col.id);
+          md += `### ${col.title} (${colTasks.length}${col.limit ? ` / WIP ${col.limit}` : ''})\n`;
+          if (!colTasks.length) {
+            md += `_No active tasks in this stage._\n\n`;
+          } else {
+            colTasks.forEach(t => {
+              const check = col.id === 'done' ? '[x]' : '[ ]';
+              md += `- ${check} **${t.code}: ${t.title}** [${t.phase}] (Priority: ${t.priority})\n  - ${t.desc}\n`;
+            });
+            md += `\n`;
+          }
+        });
+        await navigator.clipboard.writeText(md);
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2500);
+      };
+      return (
+        <div className="p-6 max-w-[1600px] mx-auto font-sans">
+          <header className="flex flex-wrap items-center justify-between pb-6 mb-6 border-b border-slate-800 gap-4">
+            <div>
+              <div className="flex items-center gap-3">
+                <h1 className="text-xl font-bold tracking-tight text-white">Boston Sports Tracker</h1>
+                <span className="text-xs px-2 py-0.5 rounded-full bg-red-500/20 text-red-400 border border-red-500/30">PWA Roadmap</span>
+              </div>
+              <p className="text-xs text-slate-400 mt-1">Interactive Kanban board with strict WIP limits and NotebookLM export.</p>
+            </div>
+            <div className="flex items-center gap-3">
+              <button onClick={() => setTasks(INITIAL_TASKS)} className="text-xs text-slate-400 hover:text-white px-3 py-2 rounded border border-slate-700 hover:border-slate-600 transition">Reset Tasks</button>
+              <button onClick={copySnapshot} className={`text-xs font-semibold px-4 py-2 rounded shadow transition flex items-center gap-2 ${copied ? 'bg-emerald-600 text-white' : 'bg-blue-600 hover:bg-blue-500 text-white'}`}>
+                {copied ? '✓ Snapshot Copied to Clipboard!' : '📋 Copy NotebookLM Snapshot'}
+              </button>
+            </div>
+          </header>
+          <main className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-5 gap-4">
+            {INITIAL_COLUMNS.map(col => {
+              const colTasks = tasks.filter(t => t.columnId === col.id);
+              return (
+                <div key={col.id} onDragOver={(e) => e.preventDefault()} onDrop={() => handleDrop(col.id)} className="bg-slate-900/60 border border-slate-800 rounded-lg p-3 min-h-[550px] flex flex-col">
+                  <div className="flex items-center justify-between pb-3 mb-3 border-b border-slate-800">
+                    <span className="text-xs font-bold uppercase tracking-wider text-slate-300">{col.title}</span>
+                    <span className={`text-[10px] font-mono px-2 py-0.5 rounded border ${col.badge}`}>{colTasks.length}{col.limit ? `/${col.limit}` : ''}</span>
+                  </div>
+                  <div className="flex flex-col gap-2.5 flex-1">
+                    {colTasks.map(t => (
+                      <div key={t.id} draggable onDragStart={() => setDraggedId(t.id)} className="bg-slate-800/80 hover:bg-slate-800 p-3 rounded border border-slate-700/60 shadow-sm cursor-grab active:cursor-grabbing transition">
+                        <div className="flex items-center justify-between mb-1.5">
+                          <span className="text-[10px] font-mono text-slate-400">{t.code}</span>
+                          <span className={`text-[9px] px-1.5 py-0.5 rounded font-semibold ${t.priority === 'Urgent' ? 'bg-red-500/20 text-red-400 border border-red-500/30' : t.priority === 'High' ? 'bg-amber-500/20 text-amber-400 border border-amber-500/30' : 'bg-slate-700 text-slate-300'}`}>{t.priority}</span>
+                        </div>
+                        <h2 className="text-xs font-semibold text-slate-100 mb-1">{t.title}</h2>
+                        <p className="text-[11px] text-slate-400 leading-relaxed mb-3">{t.desc}</p>
+                        <div className="flex items-center justify-between pt-2 border-t border-slate-700/50 text-[10px] text-slate-500">
+                          <span>{t.phase}</span>
+                          <div className="flex gap-2">
+                            {col.id !== 'backlog' && (
+                              <button onClick={() => setTasks(prev => prev.map(item => item.id === t.id ? { ...item, columnId: 'backlog' } : item))} className="hover:text-slate-200" title="Move back">←</button>
+                            )}
+                            {col.id !== 'done' && (
+                              <button onClick={() => {
+                                const nextId = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'review' : 'done';
+                                setTasks(prev => prev.map(item => item.id === t.id ? { ...item, columnId: nextId } : item));
+                              }} className="hover:text-emerald-400 font-bold" title="Advance">→</button>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                    {colTasks.length === 0 && (
+                      <div className="flex-1 flex items-center justify-center border border-dashed border-slate-800 rounded text-xs text-slate-600">Drop tasks here</div>
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </main>
+        </div>
+      );
+    }
+    ReactDOM.createRoot(document.getElementById('root')).render(<App />);
+  </script>
+</body>
+</html>
