@@ -117,7 +117,8 @@ export default async function handler(req, res) {
 
       return {
         team: team.name,
-        games: parsedGames
+      record: data.team?.recordSummary || '0-0',
+      games: parsedGames
       };
     });
 

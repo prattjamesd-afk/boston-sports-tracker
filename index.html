@@ -1,28 +1,35 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Boston Sports Tracker</title>
-    <link rel="manifest" href="/manifest.json">
+  <link rel="manifest" href="/manifest.json">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#0f172a">
+  <meta name="theme-color" content="#0b0f17">
 
   <style>
     :root {
-      --bg: #0f172a;
-      --card-bg: #1e293b;
+      --bg: #0D1B2A;
+      /* Dark Navy */
+      --card-bg: rgba(18, 26, 38, 0.78);
+      --card-border: rgba(255, 255, 255, 0.08);
       --text: #f8fafc;
       --text-muted: #94a3b8;
-      --accent-red: #ba0c2f;
-      --accent-green: #007a33;
-      --accent-gold: #ffb81c;
-      --accent-blue: #38bdf8;
-      --pill-bg: #334155;
+      --glass-blur: blur(16px);
+      --status-live: #00e676;
+      --theme-redsox: #BD3039;
+      /* Crimson */
     }
 
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
       background-color: var(--bg);
@@ -31,12 +38,53 @@
       justify-content: center;
       min-height: 100vh;
       padding: 16px;
+      -webkit-font-smoothing: antialiased;
     }
 
-    .app-container { width: 100%; max-width: 480px; display: flex; flex-direction: column; gap: 16px; }
-    header { padding-top: 8px; }
-    header h1 { font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
-    #view-subtitle { font-size: 0.85rem; color: var(--text-muted); margin-top: 4px; }
+    .app-container {
+      width: 100%;
+      max-width: 480px;
+      display: flex;
+      flex-direction: column;
+      gap: 24px;
+    }
+
+
+    header {
+      padding-top: 8px;
+    }
+
+    .live-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--status-live);
+      margin-bottom: 6px;
+    }
+
+    .pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background-color: var(--status-live);
+      box-shadow: 0 0 8px var(--status-live);
+    }
+
+    header h1 {
+      font-size: 1.6rem;
+      font-weight: 800;
+      letter-spacing: -0.02em;
+    }
+
+    #view-subtitle {
+      font-size: 0.85rem;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
 
     .filter-bar {
       display: flex;
@@ -46,94 +94,153 @@
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
     }
-    .filter-bar::-webkit-scrollbar { display: none; }
+
+    .filter-bar::-webkit-scrollbar {
+      display: none;
+    }
 
     .filter-btn {
       flex: 0 0 auto;
-      background-color: var(--pill-bg);
-      color: var(--text);
-      border: 1px solid transparent;
-      padding: 8px 14px;
+      background-color: rgba(30, 41, 59, 0.85);
+      color: var(--text-muted);
+      border: 1px solid var(--card-border);
+      padding: 7px 14px;
       border-radius: 9999px;
-      font-size: 0.85rem;
+      font-size: 0.82rem;
       font-weight: 600;
       cursor: pointer;
-      transition: background-color 0.15s ease;
+      transition: all 0.2s ease;
     }
-    .filter-btn.active { background-color: #38bdf8; color: #0f172a; }
 
-    #schedule-container { display: flex; flex-direction: column; gap: 12px; }
+    .filter-btn.active {
+      background-color: var(--theme-redsox);
+      color: #ffffff;
+      border-color: var(--theme-redsox);
+    }
+
+    #schedule-container {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
 
     .card {
       background-color: var(--card-bg);
-      border: 1px solid #334155;
-      border-radius: 12px;
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
       padding: 16px;
       display: flex;
       flex-direction: column;
-      gap: 8px;
+      gap: 12px;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.2);
     }
 
-    .card-header { display: flex; justify-content: space-between; align-items: center; }
-    .team-name { font-size: 0.85rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.05em; }
-    .matchup { font-size: 1.05rem; font-weight: 600; }
-    .game-time { font-size: 0.85rem; color: var(--text-muted); }
 
-    /* Broadcast Network Badges */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .team-name {
+      font-size: 0.72rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+    }
+
+    .game-time {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      font-weight: 500;
+    }
+
+    .matchup {
+      font-size: 1.05rem;
+      font-weight: 700;
+      line-height: 1.35;
+      color: var(--text);
+    }
+
+    .card-footer {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 12px;
+      margin-top: 4px;
+    }
+
+
     .broadcast-container {
       display: flex;
       align-items: center;
       gap: 8px;
-      margin-top: 4px;
     }
 
     .badge {
       display: inline-block;
       padding: 3px 8px;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       font-weight: 700;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      border-radius: 9999px;
+      letter-spacing: 0.4px;
+      border-radius: 6px;
       color: #ffffff;
-      background-color: #4b5563;
-      vertical-align: middle;
+      background-color: #334155;
     }
 
     .badge-nesn {
-      background-color: #b91c1c;
-      color: #ffffff;
+      background-color: rgba(185, 28, 28, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(185, 28, 28, 0.3);
     }
 
     .badge-nbcsb {
-      background-color: #047857;
-      color: #ffffff;
+      background-color: rgba(4, 120, 87, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(4, 120, 87, 0.3);
     }
 
     .badge-peacock {
-      background-color: #0284c7;
-      color: #ffffff;
+      background-color: rgba(2, 132, 199, 0.2);
+      color: #7dd3fc;
+      border: 1px solid rgba(2, 132, 199, 0.3);
     }
 
     .badge-espn {
-      background-color: #dc2626;
-      color: #ffffff;
+      background-color: rgba(220, 38, 38, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(220, 38, 38, 0.3);
     }
 
     .badge-cbs {
-      background-color: #1d4ed8;
-      color: #ffffff;
+      background-color: rgba(29, 78, 216, 0.2);
+      color: #93c5fd;
+      border: 1px solid rgba(29, 78, 216, 0.3);
     }
 
     .badge-tbd {
-      background-color: #6b7280;
-      color: #f3f4f6;
+      background-color: rgba(71, 85, 105, 0.2);
+      color: #cbd5e1;
+      border: 1px solid rgba(71, 85, 105, 0.3);
+    }
+
+    .venue-meta {
+      font-size: 0.78rem;
+      color: var(--text-muted);
     }
   </style>
 </head>
+
 <body>
   <div class="app-container">
     <header>
+      <div class="live-indicator">
+        <span class="pulse-dot"></span> Hub Sync Live
+      </div>
       <h1>Boston Sports Tracker</h1>
       <p id="view-subtitle">Next 7 Days — All Teams</p>
     </header>
@@ -169,13 +276,12 @@
     }
 
     function getTeamColor(teamName) {
-      switch(teamName) {
-        case 'Red Sox': return 'var(--accent-red)';
-        case 'Celtics': return 'var(--accent-green)';
-        case 'Bruins': return 'var(--accent-gold)';
-        case 'Patriots': return 'var(--accent-blue)';
-        default: return 'var(--text)';
-      }
+      const n = (teamName || '').toLowerCase();
+      if (n.includes('sox')) return '#bd3039';
+      if (n.includes('celtic')) return '#008348';
+      if (n.includes('bruin')) return '#ffb81c';
+      if (n.includes('patriot') || n.includes('pats')) return '#c60c30';
+      return '#f8fafc';
     }
 
     function getBadgeClass(channel) {
@@ -229,13 +335,16 @@
         }
 
       } else {
-        subtitle.textContent = `Next 3 Games — ${teamFilter}`;
         const teamObj = teamsPayload.find(t => t.team === teamFilter);
-        if (teamObj) {
-          const list = Array.isArray(teamObj.games) ? teamObj.games : (teamObj.gameName ? [teamObj] : []);
-          displayGames = list.filter(isUpcoming).slice(0, 3);
+        subtitle.textContent = `Next 3 Games — ${teamFilter} (Record: ${teamObj?.record || '0-0'})`;
+        if (teamObj && teamObj.games) {
+          const upcoming = (Array.isArray(teamObj.games) ? teamObj.games : []).filter(isUpcoming);
+          displayGames = upcoming.slice(0, 3);
         }
+
       }
+
+
 
       if (!displayGames || displayGames.length === 0) {
         subtitle.textContent = teamFilter === 'All' ? 'Schedule Overview' : `${teamFilter} — Off-Season`;
@@ -255,16 +364,20 @@
       container.innerHTML = displayGames.map(game => {
         const channelName = game.broadcast || 'TBD';
         const badgeClass = getBadgeClass(channelName);
+        const teamColor = getTeamColor(game.team);
 
         return `
           <div class="card">
             <div class="card-header">
-              <span class="team-name" style="color: ${getTeamColor(game.team)}">${game.team}</span>
-              <span class="game-time">${formatGameDate(game.date)}</span>
+              <span class="team-name" style="color: ${teamColor}">${game.team}</span>
+              <span class="game-time">🕒 ${formatGameDate(game.date)}</span>
             </div>
             <div class="matchup">${game.gameName}</div>
-            <div class="broadcast-container">
-              <span class="badge ${badgeClass}">${channelName}</span>
+            <div class="card-footer">
+              <div class="broadcast-container">
+                <span class="badge ${badgeClass}">${channelName}</span>
+              </div>
+              <div class="venue-meta">Schedule Feed</div>
             </div>
           </div>
         `;
@@ -294,16 +407,7 @@
     });
 
     loadSchedule();
-        // Register Service Worker for PWA shell caching
-    if ('serviceWorker' in navigator) {
-      window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js')
-          .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
-          .catch((err) => console.warn('Service Worker registration failed:', err));
-      });
-    }
-
   </script>
 </body>
-</html>
 
+</html>
