@@ -11,25 +11,25 @@
 ## 2. Kanban Board
 
 ### Live / Shipped
+* **Push / Game Start Badges (WIP 1):** Extracted `status` (`'pre'`, `'in'`, `'post'`) in `api/games.js`; implemented animated `.badge-live` indicator in `index.html` card footer.
+* **PWA Offline Service Worker Caching:** Implemented network-first navigation fallback and stale-while-revalidate caching in `sw.js` (commit `2c7fc1b`).
 * **TASK-15:** Stitch UI redesign (navy background, rounded cards, team color accents, badge glass styling).
-* **Local Dev Runtime:** Established local testing environment via `npx vercel dev` on `http://localhost:3000`.
+* **Local Dev Runtime:** Established local testing environment via `npx vercel dev` on `http://localhost:3000` / `3001`.
 * **Off-Season Fallback Handling:** Resolved syntax errors in `renderView()` and filtered single-team views using `isUpcoming`.
-* **Git Commit & Production Deployment:** Commit `6d0d77a` deployed and verified live on Vercel production URL.
-* **Multi-Team Live Schedule Audit:** Verified live cards, off-season fallback, and broadcast badges across all four teams on production.
-* **PWA Offline Service Worker Caching:** Verify cache strategies in `sw.js` for standalone home screen installs.
 
-### In Progress (WIP 1)
-* **Push / Game Start Badges:** Explore visual status tags for in-progress games (Live / Final).
-
-### Next Up (WIP 2)
-
+### In Progress (WIP 2)
+* **PWA Standalone App Icons & Polish:** Verify Apple Touch Icons and splash manifest display for iOS Home Screen bookmarking.
 
 ### Backlog
-* None
+* Push Notifications exploration
+* Scoreboard / Post-Game Final tag
+
 
 ---
 
 ## 3. Current Session Checkpoint
-* **Production State:** Verified live on `boston-sports-tracker.vercel.app` (all 4 teams rendering properly).
-* **Active Task:** WIP 1 — Review and update `sw.js` for offline PWA asset caching.
-* **Next Action:** Inspect `sw.js` cache list and fetch event handling.
+* **Production State:** Commit ready for push with verified in-progress live badges.
+* **Local Workspace:** `api/games.js`, `index.html`, and `PROJECT_STATE.MD` updated.
+* **Active Task:** Transitioning to WIP 2 — PWA Standalone App Icons & Polish.
+* **Next Action:** Verify `manifest.json` and Apple Touch Icon link tags in `index.html`.
+

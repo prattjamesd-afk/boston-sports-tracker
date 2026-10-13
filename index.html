@@ -232,6 +232,19 @@
       font-size: 0.78rem;
       color: var(--text-muted);
     }
+    .badge-live {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      font-weight: 700;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+
   </style>
 </head>
 
@@ -365,6 +378,7 @@
         const channelName = game.broadcast || 'TBD';
         const badgeClass = getBadgeClass(channelName);
         const teamColor = getTeamColor(game.team);
+        const isLive = game.status === 'in';
 
         return `
           <div class="card">
@@ -376,12 +390,14 @@
             <div class="card-footer">
               <div class="broadcast-container">
                 <span class="badge ${badgeClass}">${channelName}</span>
+                ${isLive ? '<span class="badge badge-live">LIVE</span>' : ''}
               </div>
               <div class="venue-meta">Schedule Feed</div>
             </div>
           </div>
         `;
       }).join('');
+
     }
 
     async function loadSchedule() {

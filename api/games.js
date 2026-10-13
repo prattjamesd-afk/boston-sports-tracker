@@ -50,7 +50,11 @@ export default async function handler(req, res) {
 
       const now = new Date();
       let events = data.events || [];
-      let upcoming = events.filter(evt => new Date(evt.date) >= now);
+      let upcoming = events.filter(evt => {
+        const state = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state;
+        return state === 'in' || new Date(evt.date) >= now;
+      });
+
       let isPostseason = false;
 
       // Postseason check if regular season is complete
@@ -106,13 +110,17 @@ export default async function handler(req, res) {
           team.name === 'Red Sox' && isPostseason
         );
 
+        const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
+
         return {
           id: evt.id,
           team: team.name,
           gameName: evt.name,
           date: evt.date,
-          broadcast: finalBroadcast
+          broadcast: finalBroadcast,
+          status: gameState
         };
+
       }));
 
       return {
