@@ -403,11 +403,24 @@
 
     }
 
+    function updateSyncTime() {
+      const livePill = document.querySelector('.live-indicator');
+      if (livePill) {
+        const timeStr = new Date().toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+        livePill.innerHTML = `<span class="pulse-dot"></span> Synced ${timeStr}`;
+        livePill.style.opacity = '1';
+      }
+    }
+
     async function loadSchedule() {
       try {
-        const res = await fetch('/api/games');
+        const res = await fetch(`/api/games?_t=${Date.now()}`, {
+          cache: 'no-store',
+          headers: { 'Cache-Control': 'no-cache' }
+        });
         teamsPayload = await res.json();
         renderView('All');
+        updateSyncTime();
       } catch (err) {
         container.innerHTML = `
           <div class="card">
@@ -416,6 +429,7 @@
           </div>`;
       }
     }
+
 
     filterButtons.forEach(btn => {
       btn.addEventListener('click', () => {
@@ -460,6 +474,42 @@
       });
     });
   }
+  // 3. Standalone iOS PWA Touch Pull-to-Refresh
+  let touchStartY = 0;
+  let isPulling = false;
+
+  window.addEventListener('touchstart', (e) => {
+    if (window.scrollY <= 0) {
+      touchStartY = e.touches[0].clientY;
+      isPulling = true;
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchmove', (e) => {
+    if (!isPulling) return;
+    const pullDistance = e.touches[0].clientY - touchStartY;
+    if (pullDistance > 60 && window.scrollY <= 0) {
+      const pill = document.querySelector('.live-indicator');
+      if (pill) pill.style.opacity = '0.5';
+    }
+  }, { passive: true });
+
+  window.addEventListener('touchend', (e) => {
+    if (!isPulling) return;
+    const pullDistance = e.changedTouches[0].clientY - touchStartY;
+    isPulling = false;
+
+    if (pullDistance > 70 && window.scrollY <= 0) {
+      const pill = document.querySelector('.live-indicator');
+      if (pill) pill.style.opacity = '0.5';
+      if (swRegistration) swRegistration.update();
+      loadSchedule();
+    } else {
+      const pill = document.querySelector('.live-indicator');
+      if (pill) pill.style.opacity = '1';
+    }
+  }, { passive: true });
+
 </script>
 
 

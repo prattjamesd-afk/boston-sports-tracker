@@ -110,7 +110,7 @@ export default async function handler(req, res) {
           team.name === 'Red Sox' && isPostseason
         );
 
-        const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
+               const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
 
         return {
           id: evt.id,
@@ -132,7 +132,8 @@ export default async function handler(req, res) {
 
     const results = await Promise.all(fetchPromises);
 
-    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120, max-age=0, must-revalidate, no-cache');
+
     res.status(200).json(results);
 
   } catch (error) {
