@@ -25,8 +25,7 @@ export default async function handler(req, res) {
 
   // Prioritize regional sports networks (NESN, NESN+, NBCSB) for local viewers
   function prioritizeLocalBroadcast(networks, isPostseasonRedSox = false) {
-    if (isPostseasonRedSox) return 'NBC / Peacock';
-    if (!networks || networks.length === 0) return 'TBD';
+        if (!networks || networks.length === 0) return 'TBD';
 
     // Check explicitly for verified NESN / NESN+ assignments
     const nesnPlus = networks.find(n => n.toUpperCase().includes('NESN+'));
@@ -130,7 +129,12 @@ export default async function handler(req, res) {
       };
     });
 
-    const results = await Promise.all(fetchPromises);
+    const settled = await Promise.allSettled(fetchPromises);
+    const results = settled.map((outcome, i) => {
+      if (outcome.status === 'fulfilled') return outcome.value;
+      console.error(`Failed to load ${TEAMS[i].name}:`, outcome.reason);
+      return { team: TEAMS[i].name, record: null, games: [], failed: true };
+    });
 
     res.setHeader('Cache-Control', 's-maxage=60, stale-while-revalidate=120, max-age=0, must-revalidate, no-cache');
 
