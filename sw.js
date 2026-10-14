@@ -38,15 +38,24 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // HTML page navigation: Network-first, fall back to cached shell offline
+  // HTML page navigation: Network-first with cache-busting, update offline cache
   if (event.request.mode === 'navigate') {
     event.respondWith(
-      fetch(event.request).catch(() => {
-        return caches.match('/index.html') || caches.match('/');
-      })
+      fetch(event.request, { cache: 'no-cache' })
+        .then((response) => {
+          if (response && response.status === 200) {
+            const copy = response.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(event.request, copy));
+          }
+          return response;
+        })
+        .catch(() => {
+          return caches.match('/index.html') || caches.match('/');
+        })
     );
     return;
   }
+
 
   // Static assets: Stale-While-Revalidate
   event.respondWith(

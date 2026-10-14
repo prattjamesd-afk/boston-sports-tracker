@@ -64,7 +64,10 @@
       text-transform: uppercase;
       color: var(--status-live);
       margin-bottom: 6px;
+      cursor: pointer;
+      user-select: none;
     }
+
 
     .pulse-dot {
       width: 6px;
@@ -425,14 +428,40 @@
     loadSchedule();
   </script>
   <script>
+  let swRegistration = null;
+
   if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
       navigator.serviceWorker.register('/sw.js')
-        .then((reg) => console.log('Service Worker registered successfully:', reg.scope))
+        .then((reg) => {
+          swRegistration = reg;
+          console.log('Service Worker registered:', reg.scope);
+        })
         .catch((err) => console.error('Service Worker registration failed:', err));
     });
   }
+
+  // 1. Refresh whenever returning to the app from lock screen or app switcher
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'visible') {
+      if (swRegistration) swRegistration.update();
+      loadSchedule();
+    }
+  });
+
+  // 2. Tap-to-refresh on the "HUB SYNC LIVE" pill
+  const livePill = document.querySelector('.live-indicator');
+  if (livePill) {
+    livePill.addEventListener('click', () => {
+      livePill.style.opacity = '0.5';
+      if (swRegistration) swRegistration.update();
+      loadSchedule().finally(() => {
+        livePill.style.opacity = '1';
+      });
+    });
+  }
 </script>
+
 
 </body>
 
