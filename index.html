@@ -120,6 +120,23 @@
       color: #ffffff;
       border-color: var(--theme-redsox);
     }
+    .filter-btn[data-team="Celtics"].active {
+      background-color: #008348;
+      color: #ffffff;
+      border-color: #008348;
+    }
+
+    .filter-btn[data-team="Bruins"].active {
+      background-color: #ffb81c;
+      color: #0D1B2A;
+      border-color: #ffb81c;
+    }
+
+    .filter-btn[data-team="Patriots"].active {
+      background-color: #1d4ed8;
+      color: #ffffff;
+      border-color: #1d4ed8;
+    }
 
     #schedule-container {
       display: flex;
@@ -296,7 +313,7 @@
       if (n.includes('sox')) return '#bd3039';
       if (n.includes('celtic')) return '#008348';
       if (n.includes('bruin')) return '#ffb81c';
-      if (n.includes('patriot') || n.includes('pats')) return '#c60c30';
+      if (n.includes('patriot') || n.includes('pats')) return '#3b82f6';
       return '#f8fafc';
     }
 
