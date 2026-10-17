@@ -32,3 +32,7 @@
 ## 3. Current Session Checkpoint
 * **Production State:** Deployed to `https://boston-sports-tracker.vercel.app/` and verified working across macOS Safari, iOS Safari, and iOS Home Screen standalone PWA.
 * **iOS Cache Reset Procedure:** If iOS Safari or the Home Screen PWA ever holds onto an old Service Worker cache after a major update, remove the Home Screen icon, delete `vercel.app` and `vercel.com` under **iPhone Settings -> Apps -> Safari -> Advanced -> Website Data**, reload `https://boston-sports-tracker.vercel.app/` in Safari, and re-add to Home Screen.
+
+## 4. Development Workflow
+* All future code edits across `index.html`, `api/games.js`, `manifest.json`, and `sw.js` are executed via GitHub Copilot Agent mode in VS Code.
+* Before syncing any frontend change to GitHub/Vercel, bump the cache version in `sw.js`.
