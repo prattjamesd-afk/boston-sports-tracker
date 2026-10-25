@@ -24,7 +24,7 @@ export default async function handler(req, res) {
   }
 
   // Prioritize regional sports networks (NESN, NESN+, NBCSB) for local viewers
-  function prioritizeLocalBroadcast(networks, isPostseasonRedSox = false) {
+  function prioritizeLocalBroadcast(networks, teamName, isPostseasonRedSox = false) {
         if (!networks || networks.length === 0) return 'TBD';
 
     // Check explicitly for verified NESN / NESN+ assignments
@@ -36,6 +36,14 @@ export default async function handler(req, res) {
 
     const nbcsb = networks.find(n => n.toUpperCase().includes('NBC SPORTS BOSTON') || n.toUpperCase().includes('NBCSB'));
     if (nbcsb) return 'NBC Sports Boston';
+
+    if (
+      teamName === 'Celtics' &&
+      networks.length === 1 &&
+      networks[0].toUpperCase().includes('NBA LEAGUE PASS')
+    ) {
+      return 'NBC Sports Boston';
+    }
 
     // If no RSN found, return the full confirmed list (e.g. ESPN, TNT, ABC, CBS)
     return networks.join(', ');
@@ -106,6 +114,7 @@ export default async function handler(req, res) {
         // Resolve exact broadcast label based on confirmed API data
         const finalBroadcast = prioritizeLocalBroadcast(
           networks, 
+          team.name,
           team.name === 'Red Sox' && isPostseason
         );
 
