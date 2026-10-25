@@ -13,19 +13,26 @@ export default async function handler(req, res) {
     for (const b of broadcastArray) {
       if (Array.isArray(b.names)) {
         names.push(...b.names);
-      } else if (b.name) {
+      }
+      if (b.name) {
         names.push(b.name);
-      } else if (b.media?.shortName) {
+      }
+      if (b.media?.shortName) {
         names.push(b.media.shortName);
       }
     }
     // Return unique non-empty names
-    return [...new Set(names.filter(Boolean))];
+    return [...new Set(names.filter(name => typeof name === 'string' && name.trim()))];
   }
 
   // Prioritize regional sports networks (NESN, NESN+, NBCSB) for local viewers
   function prioritizeLocalBroadcast(networks, teamName, isPostseasonRedSox = false) {
         if (!networks || networks.length === 0) return 'TBD';
+
+    if (teamName === 'Celtics') {
+      const nbcsb = networks.find(n => /NBC\s*SPORTS\s*BOSTON|NBCSB/i.test(n));
+      if (nbcsb) return 'NBC Sports Boston';
+    }
 
     // Check explicitly for verified NESN / NESN+ assignments
     const nesnPlus = networks.find(n => n.toUpperCase().includes('NESN+'));
