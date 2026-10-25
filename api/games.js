@@ -11,6 +11,7 @@ export default async function handler(req, res) {
     if (!Array.isArray(broadcastArray) || broadcastArray.length === 0) return [];
     const names = [];
     for (const b of broadcastArray) {
+      if (!b || typeof b !== 'object') continue;
       if (Array.isArray(b.names)) {
         names.push(...b.names);
       }
@@ -27,33 +28,32 @@ export default async function handler(req, res) {
 
   // Prioritize regional sports networks (NESN, NESN+, NBCSB) for local viewers
   function prioritizeLocalBroadcast(networks, teamName, isPostseasonRedSox = false) {
-        if (!networks || networks.length === 0) return 'TBD';
+    const validNetworks = Array.isArray(networks)
+      ? networks.filter(network => typeof network === 'string' && network.trim())
+      : [];
+    if (validNetworks.length === 0) return 'TBD';
 
     if (teamName === 'Celtics') {
-      const nbcsb = networks.find(n => /NBC\s*SPORTS\s*BOSTON|NBCSB/i.test(n));
+      const nbcsb = validNetworks.find(n => /NBC\s*SPORTS\s*BOSTON|NBCSB/i.test(n));
       if (nbcsb) return 'NBC Sports Boston';
     }
 
     // Check explicitly for verified NESN / NESN+ assignments
-    const nesnPlus = networks.find(n => n.toUpperCase().includes('NESN+'));
+    const nesnPlus = validNetworks.find(n => n.toUpperCase().includes('NESN+'));
     if (nesnPlus) return 'NESN+';
 
-    const nesn = networks.find(n => n.toUpperCase().includes('NESN'));
+    const nesn = validNetworks.find(n => n.toUpperCase().includes('NESN'));
     if (nesn) return 'NESN';
 
-    const nbcsb = networks.find(n => n.toUpperCase().includes('NBC SPORTS BOSTON') || n.toUpperCase().includes('NBCSB'));
+    const nbcsb = validNetworks.find(n => n.toUpperCase().includes('NBC SPORTS BOSTON') || n.toUpperCase().includes('NBCSB'));
     if (nbcsb) return 'NBC Sports Boston';
 
-    if (
-      teamName === 'Celtics' &&
-      networks.length === 1 &&
-      networks[0].toUpperCase().includes('NBA LEAGUE PASS')
-    ) {
-      return 'NBC Sports Boston';
+    if (teamName === 'Celtics' && validNetworks.some(n => n.toUpperCase().includes('NBA LEAGUE PASS'))) {
+      return 'NBC Sports Boston*';
     }
 
     // If no RSN found, return the full confirmed list (e.g. ESPN, TNT, ABC, CBS)
-    return networks.join(', ');
+    return validNetworks.join(', ');
   }
 
   try {
@@ -117,6 +117,8 @@ export default async function handler(req, res) {
 
         // Remove duplicates
         networks = [...new Set(networks)];
+
+        console.log(`Raw API networks for ${team.name}:`, networks);
 
         // Resolve exact broadcast label based on confirmed API data
         const finalBroadcast = prioritizeLocalBroadcast(
