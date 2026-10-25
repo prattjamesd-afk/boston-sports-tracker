@@ -16,8 +16,7 @@
     :root {
       --bg: #0D1B2A;
       /* Dark Navy */
-      --card-bg: rgba(18, 26, 38, 0.78);
-      --card-border: rgba(255, 255, 255, 0.08);
+      --card-bg: rgba(255, 255, 255, 0.06);
       --text: #f8fafc;
       --text-muted: #94a3b8;
       --glass-blur: blur(16px);
@@ -51,6 +50,16 @@
       gap: 24px;
     }
 
+    .sticky-header {
+      position: sticky;
+      top: 0;
+      z-index: 10;
+      margin: -16px -16px 0;
+      padding: 16px 16px 12px;
+      background-color: rgba(13, 27, 42, 0.78);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
 
     header {
       padding-top: 8px;
@@ -95,6 +104,7 @@
       display: flex;
       gap: 8px;
       overflow-x: auto;
+      margin-top: 16px;
       padding-bottom: 4px;
       -webkit-overflow-scrolling: touch;
       scrollbar-width: none;
@@ -106,9 +116,9 @@
 
     .filter-btn {
       flex: 0 0 auto;
-      background-color: rgba(30, 41, 59, 0.85);
+      background-color: rgba(255, 255, 255, 0.1);
       color: var(--text-muted);
-      border: 1px solid var(--card-border);
+      border: none;
       padding: 7px 14px;
       border-radius: 9999px;
       font-size: 0.82rem;
@@ -118,26 +128,8 @@
     }
 
     .filter-btn.active {
-      background-color: var(--theme-redsox);
-      color: #ffffff;
-      border-color: var(--theme-redsox);
-    }
-    .filter-btn[data-team="Celtics"].active {
-      background-color: #008348;
-      color: #ffffff;
-      border-color: #008348;
-    }
-
-    .filter-btn[data-team="Bruins"].active {
-      background-color: #ffb81c;
-      color: #0D1B2A;
-      border-color: #ffb81c;
-    }
-
-    .filter-btn[data-team="Patriots"].active {
-      background-color: #1d4ed8;
-      color: #ffffff;
-      border-color: #1d4ed8;
+      background-color: #ffffff;
+      color: #1f2937;
     }
 
     #schedule-container {
@@ -150,8 +142,8 @@
       background-color: var(--card-bg);
       backdrop-filter: var(--glass-blur);
       -webkit-backdrop-filter: var(--glass-blur);
-      border: 1px solid var(--card-border);
-      border-radius: 16px;
+      border: none;
+      border-radius: 24px;
       padding: 16px;
       display: flex;
       flex-direction: column;
@@ -167,21 +159,31 @@
     }
 
     .team-name {
-      font-size: 0.72rem;
-      font-weight: 700;
+      font-size: 0.65rem;
+      font-weight: 600;
+      opacity: 0.65;
       text-transform: uppercase;
       letter-spacing: 0.06em;
     }
 
     .game-time {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       font-size: 0.8rem;
       color: var(--text-muted);
       font-weight: 500;
     }
 
+    .clock-icon {
+      width: 15px;
+      height: 15px;
+      flex: 0 0 auto;
+    }
+
     .matchup {
-      font-size: 1.05rem;
-      font-weight: 700;
+      font-size: 1.15rem;
+      font-weight: 800;
       line-height: 1.35;
       color: var(--text);
     }
@@ -209,7 +211,7 @@
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 0.4px;
-      border-radius: 6px;
+      border-radius: 9999px;
       color: #ffffff;
       background-color: #334155;
     }
@@ -268,21 +270,23 @@
 
 <body>
   <div class="app-container">
-    <header>
-      <div class="live-indicator">
-        <span class="pulse-dot"></span> Hub Sync Live
-      </div>
-      <h1>Boston Sports Tracker</h1>
-      <p id="view-subtitle">Next 7 Days — All Teams</p>
-    </header>
+    <div class="sticky-header">
+      <header>
+        <div class="live-indicator">
+          <span class="pulse-dot"></span> Hub Sync Live
+        </div>
+        <h1>Boston Sports Tracker</h1>
+        <p id="view-subtitle">Next 7 Days — All Teams</p>
+      </header>
 
-    <nav class="filter-bar" aria-label="Team Filters">
-      <button class="filter-btn active" data-team="All">All (7 Days)</button>
-      <button class="filter-btn" data-team="Red Sox">Red Sox</button>
-      <button class="filter-btn" data-team="Celtics">Celtics</button>
-      <button class="filter-btn" data-team="Bruins">Bruins</button>
-      <button class="filter-btn" data-team="Patriots">Patriots</button>
-    </nav>
+      <nav class="filter-bar" aria-label="Team Filters">
+        <button class="filter-btn active" data-team="All">All (7 Days)</button>
+        <button class="filter-btn" data-team="Red Sox">Red Sox</button>
+        <button class="filter-btn" data-team="Celtics">Celtics</button>
+        <button class="filter-btn" data-team="Bruins">Bruins</button>
+        <button class="filter-btn" data-team="Patriots">Patriots</button>
+      </nav>
+    </div>
 
     <main id="schedule-container">
       <div class="card">
@@ -402,7 +406,13 @@
           <div class="card">
             <div class="card-header">
               <span class="team-name" style="color: ${teamColor}">${game.team}</span>
-              <span class="game-time">🕒 ${formatGameDate(game.date)}</span>
+              <span class="game-time">
+                <svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                  <circle cx="12" cy="12" r="9"></circle>
+                  <path d="M12 7v5l3 2"></path>
+                </svg>
+                <span>${formatGameDate(game.date)}</span>
+              </span>
             </div>
             <div class="matchup">${game.gameName}</div>
             <div class="card-footer">
