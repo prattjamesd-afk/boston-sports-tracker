@@ -31,12 +31,23 @@ export default async function handler(req, res) {
     const validNetworks = Array.isArray(networks)
       ? networks.filter(network => typeof network === 'string' && network.trim())
       : [];
-    if (validNetworks.length === 0) return 'TBD';
 
     if (teamName === 'Celtics') {
+      // 1. Confirmed NBC Sports Boston from the API
       const nbcsb = validNetworks.find(n => /NBC\s*SPORTS\s*BOSTON|NBCSB/i.test(n));
       if (nbcsb) return 'NBC Sports Boston';
+
+      // 2. Confirmed national broadcast (when NBCSB isn't explicitly listed)
+      const national = validNetworks.filter(n =>
+        /^(ABC|ESPN|ESPN2|TNT|TBS|NBC|NBCSN|PEACOCK|PRIME VIDEO|NBA TV)$/i.test(n.trim())
+      );
+      if (national.length > 0) return national.join(', ');
+
+      // 3. Otherwise (empty array, NBA League Pass, or only opponent regional feeds), assume NBCSB*
+      return 'NBC Sports Boston*';
     }
+
+    if (validNetworks.length === 0) return 'TBD';
 
     // Check explicitly for verified NESN / NESN+ assignments
     const nesnPlus = validNetworks.find(n => n.toUpperCase().includes('NESN+'));
@@ -47,10 +58,6 @@ export default async function handler(req, res) {
 
     const nbcsb = validNetworks.find(n => n.toUpperCase().includes('NBC SPORTS BOSTON') || n.toUpperCase().includes('NBCSB'));
     if (nbcsb) return 'NBC Sports Boston';
-
-    if (teamName === 'Celtics' && validNetworks.some(n => n.toUpperCase().includes('NBA LEAGUE PASS'))) {
-      return 'NBC Sports Boston*';
-    }
 
     // If no RSN found, return the full confirmed list (e.g. ESPN, TNT, ABC, CBS)
     return validNetworks.join(', ');
