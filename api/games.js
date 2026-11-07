@@ -1,9 +1,41 @@
 export default async function handler(req, res) {
   const TEAMS = [
-    { name: 'Red Sox', league: 'baseball/mlb', id: 2 },
-    { name: 'Celtics', league: 'basketball/nba', id: 2 },
-    { name: 'Bruins', league: 'hockey/nhl', id: 1 },
-    { name: 'Patriots', league: 'football/nfl', id: 17 }
+    {
+      name: 'Red Sox',
+      league: 'baseball/mlb',
+      id: 2,
+      divisionName: 'AL East',
+      standingsFormat: 'winpct',
+      bostonAbbr: 'BOS',
+      divisionAbbrs: ['BOS', 'BAL', 'NYY', 'TB', 'TOR']
+    },
+    {
+      name: 'Celtics',
+      league: 'basketball/nba',
+      id: 2,
+      divisionName: 'Atlantic Division',
+      standingsFormat: 'winpct',
+      bostonAbbr: 'BOS',
+      divisionAbbrs: ['BOS', 'BKN', 'NY', 'NYK', 'PHI', 'TOR']
+    },
+    {
+      name: 'Bruins',
+      league: 'hockey/nhl',
+      id: 1,
+      divisionName: 'Atlantic Division',
+      standingsFormat: 'nhl',
+      bostonAbbr: 'BOS',
+      divisionAbbrs: ['BOS', 'BUF', 'DET', 'FLA', 'MTL', 'OTT', 'TB', 'TOR']
+    },
+    {
+      name: 'Patriots',
+      league: 'football/nfl',
+      id: 17,
+      divisionName: 'AFC East',
+      standingsFormat: 'winpct',
+      bostonAbbr: 'NE',
+      divisionAbbrs: ['NE', 'BUF', 'MIA', 'NYJ']
+    }
   ];
 
   // Helper to extract all broadcast network names across national and regional feeds
@@ -134,7 +166,7 @@ export default async function handler(req, res) {
           team.name === 'Red Sox' && isPostseason
         );
 
-               const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
+        const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
 
         return {
           id: evt.id,
@@ -147,10 +179,166 @@ export default async function handler(req, res) {
 
       }));
 
+      // Extract last 3 completed results across regular season and postseason
+      const combinedEventsMap = new Map();
+      for (const evt of [...(data.events || []), ...(events || [])]) {
+        if (evt?.id) combinedEventsMap.set(evt.id, evt);
+      }
+      const completedEvents = Array.from(combinedEventsMap.values())
+        .filter(evt => {
+          const compStatus = evt?.competitions?.[0]?.status?.type || evt?.status?.type;
+          return compStatus?.state === 'post' || compStatus?.completed === true;
+        })
+        .sort((a, b) => new Date(a.date) - new Date(b.date));
+
+      const recentResults = completedEvents.slice(-3).reverse().map(evt => {
+        const comp = evt?.competitions?.[0];
+        const competitors = comp?.competitors || [];
+        const ourComp = competitors.find(
+          c => String(c.id) === String(team.id) || String(c.team?.id) === String(team.id)
+        );
+        const oppComp = competitors.find(c => c !== ourComp);
+        const ourScore = ourComp?.score?.displayValue ?? ourComp?.score ?? '';
+        const oppScore = oppComp?.score?.displayValue ?? oppComp?.score ?? '';
+        const ourAbbr = ourComp?.team?.abbreviation || team.bostonAbbr || 'BOS';
+        const oppAbbr = oppComp?.team?.abbreviation || 'OPP';
+        const oppName = oppComp?.team?.shortDisplayName || oppComp?.team?.displayName || 'Opponent';
+        const isHome = ourComp?.homeAway === 'home';
+        const statusDetail = comp?.status?.type?.shortDetail || evt?.status?.type?.shortDetail || 'Final';
+        const isOvertime = /\b(OT|SO)\b/i.test(statusDetail);
+        const outcome = ourComp?.winner ? 'W' : (team.name === 'Bruins' && isOvertime ? 'OTL' : 'L');
+
+        return {
+          id: evt.id,
+          date: evt.date,
+          matchupLabel: `${isHome ? 'vs' : '@'} ${oppName}`,
+          scoreLabel: `${ourAbbr} ${ourScore} - ${oppAbbr} ${oppScore}`,
+          outcome,
+          statusDetail
+        };
+      });
+
+      // Fetch Division Standings for each team
+      let standings = null;
+      try {
+        const stRes = await fetch(`https://site.api.espn.com/apis/v2/sports/${team.league}/standings`);
+        const stData = await stRes.json();
+        const divAbbrs = new Set(team.divisionAbbrs || []);
+        const allEntries = (stData.children || []).flatMap(conf => [
+          ...(conf.standings?.entries || []),
+          ...(conf.children || []).flatMap(div => div.standings?.entries || [])
+        ]);
+        const seen = new Set();
+        const getStat = (entry, ...names) =>
+          entry.stats?.find(s => names.includes(s.name) || names.includes(s.abbreviation));
+
+        const filteredEntries = allEntries.filter(e => {
+          const abbr = e?.team?.abbreviation;
+          if (!abbr || !divAbbrs.has(abbr) || seen.has(abbr)) return false;
+          seen.add(abbr);
+          return true;
+        });
+
+        if (team.standingsFormat === 'nhl') {
+          const rows = filteredEntries
+            .map(e => ({
+              team: e.team.shortDisplayName || e.team.name || e.team.displayName,
+              abbr: e.team.abbreviation,
+              gp: getStat(e, 'gamesPlayed', 'GP')?.displayValue || '0',
+              w: getStat(e, 'wins', 'W')?.displayValue || '0',
+              l: getStat(e, 'losses', 'L')?.displayValue || '0',
+              otl: getStat(e, 'otLosses', 'overtimeLosses', 'OTL')?.displayValue || '0',
+              pts: Number(getStat(e, 'points', 'PTS')?.value || 0),
+              ptsDisplay: getStat(e, 'points', 'PTS')?.displayValue || '0',
+              diff: getStat(e, 'pointDifferential', 'pointsDiff', 'DIFF')?.displayValue || '0',
+              strk: getStat(e, 'streak', 'STRK')?.displayValue || '-',
+              isBoston: e.team.abbreviation === team.bostonAbbr
+            }))
+            .sort((a, b) => b.pts - a.pts || Number(b.w) - Number(a.w))
+            .map((row, idx) => ({ ...row, rank: idx + 1 }));
+
+          standings = {
+            divisionName: team.divisionName,
+            format: 'nhl',
+            rows
+          };
+        } else {
+          const rawRows = filteredEntries
+            .map(e => {
+              const wStat = getStat(e, 'wins', 'W');
+              const lStat = getStat(e, 'losses', 'L');
+              const tStat = getStat(e, 'ties', 'T');
+              const pctStat = getStat(e, 'winPercent', 'PCT');
+              const diffStat = getStat(e, 'pointDifferential', 'pointsDiff', 'differential', 'DIFF');
+              const strkStat = getStat(e, 'streak', 'STRK');
+
+              const wVal = Number(wStat?.value || 0);
+              const lVal = Number(lStat?.value || 0);
+              const tVal = Number(tStat?.value || 0);
+              const totalGames = wVal + lVal + tVal;
+              const pctVal = Number(
+                pctStat?.value ?? (totalGames > 0 ? (wVal + 0.5 * tVal) / totalGames : 0)
+              );
+              const pctDisplay = pctStat?.displayValue || pctVal.toFixed(3).replace(/^0/, '');
+
+              const wStr = wStat?.displayValue ?? String(wVal);
+              const lStr = lStat?.displayValue ?? String(lVal);
+              const recordStr = tVal > 0 ? `${wStr}-${lStr}-${tVal}` : `${wStr}-${lStr}`;
+
+              let diffDisplay = diffStat?.displayValue || '0';
+              if (diffStat?.value > 0 && !String(diffDisplay).startsWith('+')) {
+                diffDisplay = `+${diffDisplay}`;
+              }
+
+              return {
+                team: e.team.shortDisplayName || e.team.name || e.team.displayName,
+                abbr: e.team.abbreviation,
+                wVal,
+                lVal,
+                tVal,
+                record: recordStr,
+                pctVal,
+                pctDisplay,
+                diff: diffDisplay,
+                strk: strkStat?.displayValue || '-',
+                isBoston: e.team.abbreviation === team.bostonAbbr
+              };
+            })
+            .sort((a, b) => b.pctVal - a.pctVal || b.wVal - a.wVal || a.lVal - b.lVal);
+
+          const leader = rawRows[0];
+          const rows = rawRows.map((row, idx) => {
+            let gb = '-';
+            if (idx > 0 && leader) {
+              const gbNum = ((leader.wVal - row.wVal) + (row.lVal - leader.lVal)) / 2;
+              if (gbNum > 0) {
+                gb = Number.isInteger(gbNum) ? String(gbNum) : gbNum.toFixed(1);
+              }
+            }
+            return {
+              ...row,
+              gb,
+              rank: idx + 1
+            };
+          });
+
+          standings = {
+            divisionName: team.divisionName,
+            format: 'winpct',
+            rows
+          };
+        }
+      } catch (e) {
+        console.error(`Failed to fetch ${team.name} standings:`, e);
+      }
+
       return {
         team: team.name,
-      record: data.team?.recordSummary || '0-0',
-      games: parsedGames
+        record: data.team?.recordSummary || '0-0',
+        standingSummary: data.team?.standingSummary || '',
+        games: parsedGames,
+        recentResults,
+        standings
       };
     });
 

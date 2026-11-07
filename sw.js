@@ -1,4 +1,4 @@
-const CACHE_NAME = 'boston-sports-v4';
+const CACHE_NAME = 'boston-sports-v5';
 const STATIC_ASSETS = [
   '/',
   '/index.html',

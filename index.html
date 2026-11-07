@@ -118,7 +118,7 @@
       flex: 0 0 auto;
       background-color: rgba(255, 255, 255, 0.1);
       color: var(--text-muted);
-      border: none;
+      border: 1px solid transparent;
       padding: 7px 14px;
       border-radius: 9999px;
       font-size: 0.82rem;
@@ -127,9 +127,58 @@
       transition: all 0.2s ease;
     }
 
+    .filter-btn[data-team="Red Sox"] {
+      background-color: rgba(189, 48, 57, 0.22);
+      color: #fca5a5;
+      border-color: rgba(189, 48, 57, 0.45);
+    }
+
+    .filter-btn[data-team="Celtics"] {
+      background-color: rgba(0, 131, 72, 0.22);
+      color: #6ee7b7;
+      border-color: rgba(0, 131, 72, 0.45);
+    }
+
+    .filter-btn[data-team="Bruins"] {
+      background-color: rgba(255, 184, 28, 0.2);
+      color: #fde047;
+      border-color: rgba(255, 184, 28, 0.45);
+    }
+
+    .filter-btn[data-team="Patriots"] {
+      background-color: rgba(59, 130, 246, 0.22);
+      color: #93c5fd;
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+
     .filter-btn.active {
       background-color: #ffffff;
       color: #1f2937;
+      border-color: #ffffff;
+    }
+
+    .filter-btn[data-team="Red Sox"].active {
+      background-color: var(--theme-redsox);
+      color: #ffffff;
+      border-color: var(--theme-redsox);
+    }
+
+    .filter-btn[data-team="Celtics"].active {
+      background-color: #008348;
+      color: #ffffff;
+      border-color: #008348;
+    }
+
+    .filter-btn[data-team="Bruins"].active {
+      background-color: #ffb81c;
+      color: #0D1B2A;
+      border-color: #ffb81c;
+    }
+
+    .filter-btn[data-team="Patriots"].active {
+      background-color: #1d4ed8;
+      color: #ffffff;
+      border-color: #1d4ed8;
     }
 
     #schedule-container {
@@ -265,6 +314,184 @@
       50% { opacity: 0.5; }
     }
 
+    .section-title {
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--text-muted);
+      margin: 10px 4px -2px;
+    }
+
+    .results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .result-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+
+    .result-row:last-child {
+      padding-bottom: 0;
+      border-bottom: none;
+    }
+
+    .result-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .outcome-pill {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 34px;
+      padding: 3px 7px;
+      border-radius: 9999px;
+      font-size: 0.7rem;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+    }
+
+    .outcome-w {
+      background-color: rgba(16, 185, 129, 0.2);
+      color: #6ee7b7;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+    }
+
+    .outcome-l {
+      background-color: rgba(239, 68, 68, 0.2);
+      color: #fca5a5;
+      border: 1px solid rgba(239, 68, 68, 0.35);
+    }
+
+    .outcome-otl {
+      background-color: rgba(245, 158, 11, 0.2);
+      color: #fde047;
+      border: 1px solid rgba(245, 158, 11, 0.4);
+    }
+
+    .result-matchup {
+      font-size: 0.92rem;
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .result-date {
+      font-size: 0.74rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .result-right {
+      text-align: right;
+    }
+
+    .result-score {
+      font-size: 0.9rem;
+      font-weight: 700;
+      font-variant-numeric: tabular-nums;
+      color: var(--text);
+    }
+
+    .result-detail {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .standings-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.8rem;
+      font-variant-numeric: tabular-nums;
+    }
+
+    .standings-table th {
+      text-align: right;
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: var(--text-muted);
+      padding: 0 6px 8px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .standings-table th:first-child,
+    .standings-table td:first-child {
+      text-align: left;
+      padding-left: 4px;
+    }
+
+    .standings-table td {
+      text-align: right;
+      padding: 8px 6px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.04);
+      color: #e2e8f0;
+    }
+
+    .standings-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .standings-table tr.is-boston td {
+      font-weight: 700;
+    }
+
+    .standings-table tr.is-boston.boston-bruins td,
+    .standings-table tr.is-boston.boston-bruins .standings-rank {
+      background-color: rgba(255, 184, 28, 0.14);
+      color: #ffb81c;
+    }
+
+    .standings-table tr.is-boston.boston-celtics td,
+    .standings-table tr.is-boston.boston-celtics .standings-rank {
+      background-color: rgba(0, 131, 72, 0.22);
+      color: #6ee7b7;
+    }
+
+    .standings-table tr.is-boston.boston-patriots td,
+    .standings-table tr.is-boston.boston-patriots .standings-rank {
+      background-color: rgba(59, 130, 246, 0.22);
+      color: #93c5fd;
+    }
+
+    .standings-table tr.is-boston.boston-redsox td,
+    .standings-table tr.is-boston.boston-redsox .standings-rank {
+      background-color: rgba(189, 48, 57, 0.22);
+      color: #fca5a5;
+    }
+
+    .standings-table tr.is-boston .standings-rank {
+      background-color: transparent;
+      font-weight: 800;
+    }
+
+    .standings-table tr.is-boston td:first-child {
+      border-top-left-radius: 10px;
+      border-bottom-left-radius: 10px;
+    }
+
+    .standings-table tr.is-boston td:last-child {
+      border-top-right-radius: 10px;
+      border-bottom-right-radius: 10px;
+    }
+
+    .standings-rank {
+      display: inline-block;
+      width: 18px;
+      color: var(--text-muted);
+      font-weight: 600;
+    }
+
   </style>
 </head>
 
@@ -300,10 +527,29 @@
     const subtitle = document.getElementById('view-subtitle');
     const filterButtons = document.querySelectorAll('.filter-btn');
     let teamsPayload = [];
+    let activeFilter = 'All';
 
     function formatGameDate(dateStr) {
       if (!dateStr) return 'Date TBD';
       const d = new Date(dateStr);
+      const now = new Date();
+      const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+      const tomorrow = new Date(today.getTime() + 24 * 60 * 60 * 1000);
+      const gameDay = new Date(d.getFullYear(), d.getMonth(), d.getDate());
+
+      const timePart = d.toLocaleTimeString('en-US', {
+        hour: 'numeric',
+        minute: '2-digit',
+        timeZoneName: 'short'
+      });
+
+      if (gameDay.getTime() === today.getTime()) {
+        return `Today • ${timePart}`;
+      }
+      if (gameDay.getTime() === tomorrow.getTime()) {
+        return `Tomorrow • ${timePart}`;
+      }
+
       return d.toLocaleDateString('en-US', {
         weekday: 'short', month: 'short', day: 'numeric',
         hour: 'numeric', minute: '2-digit', timeZoneName: 'short'
@@ -337,7 +583,7 @@
 
       const isUpcoming = (game) => {
         if (!game || !game.date) return false;
-        return new Date(game.date) >= startOfToday;
+        return game.status === 'in' || new Date(game.date) >= startOfToday;
       };
 
       if (teamFilter === 'All') {
@@ -354,7 +600,7 @@
           .filter(g => {
             if (!g.date) return false;
             const gameDate = new Date(g.date);
-            return gameDate >= startOfToday && gameDate <= sevenDaysOut;
+            return g.status === 'in' || (gameDate >= startOfToday && gameDate <= sevenDaysOut);
           })
           .sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -381,49 +627,162 @@
 
 
 
+      let gamesHtml = '';
+
       if (!displayGames || displayGames.length === 0) {
-        subtitle.textContent = teamFilter === 'All' ? 'Schedule Overview' : `${teamFilter} — Off-Season`;
-        container.innerHTML = `
+        subtitle.textContent = teamFilter === 'All'
+          ? 'Schedule Overview'
+          : `${teamFilter} — Off-Season (Record: ${ teamsPayload.find(t => t.team === teamFilter)?.record || '0-0' })`;
+        gamesHtml = `
           <div class="card" style="text-align: center; padding: 28px 16px;">
             <div style="font-size: 1.75rem; margin-bottom: 8px;">⚾ ❄️</div>
             <div class="matchup" style="color: var(--text-muted); font-size: 1rem;">
               ${teamFilter === 'All' ? 'No games scheduled for this week' : `${teamFilter} are currently in the off-season`}
             </div>
-            <div class="game-time" style="margin-top: 6px;">
-              Check back closer to spring training and regular season announcements.
+            <div class="game-time" style="margin-top: 6px; justify-content: center;">
+              Check back closer to preseason and regular season announcements.
             </div>
           </div>`;
-        return;
-      }
+      } else {
+        gamesHtml = displayGames.map(game => {
+          const channelName = game.broadcast || 'TBD';
+          const badgeClass = getBadgeClass(channelName);
+          const teamColor = getTeamColor(game.team);
+          const isLive = game.status === 'in';
 
-      container.innerHTML = displayGames.map(game => {
-        const channelName = game.broadcast || 'TBD';
-        const badgeClass = getBadgeClass(channelName);
-        const teamColor = getTeamColor(game.team);
-        const isLive = game.status === 'in';
-
-        return `
-          <div class="card">
-            <div class="card-header">
-              <span class="team-name" style="color: ${teamColor}">${game.team}</span>
-              <span class="game-time">
-                <svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                  <circle cx="12" cy="12" r="9"></circle>
-                  <path d="M12 7v5l3 2"></path>
-                </svg>
-                <span>${formatGameDate(game.date)}</span>
-              </span>
-            </div>
-            <div class="matchup">${game.gameName}</div>
-            <div class="card-footer">
-              <div class="broadcast-container">
-                <span class="badge ${badgeClass}">${channelName}</span>
-                ${isLive ? '<span class="badge badge-live">LIVE</span>' : ''}
+          return `
+            <div class="card">
+              <div class="card-header">
+                <span class="team-name" style="color: ${teamColor}">${game.team}</span>
+                <span class="game-time">
+                  <svg class="clock-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+                    <circle cx="12" cy="12" r="9"></circle>
+                    <path d="M12 7v5l3 2"></path>
+                  </svg>
+                  <span>${formatGameDate(game.date)}</span>
+                </span>
+              </div>
+              <div class="matchup">${game.gameName}</div>
+              <div class="card-footer">
+                <div class="broadcast-container">
+                  <span class="badge ${badgeClass}">${channelName}</span>
+                  ${isLive ? '<span class="badge badge-live">LIVE</span>' : ''}
+                </div>
               </div>
             </div>
-          </div>
-        `;
-      }).join('');
+          `;
+        }).join('');
+      }
+
+      let extraSectionsHtml = '';
+
+      if (teamFilter !== 'All') {
+        const teamObj = teamsPayload.find(t => t.team === teamFilter);
+        const recent = teamObj?.recentResults || [];
+        const standings = teamObj?.standings;
+        const bostonRowClassMap = {
+          'Red Sox': 'boston-redsox',
+          'Celtics': 'boston-celtics',
+          'Bruins': 'boston-bruins',
+          'Patriots': 'boston-patriots'
+        };
+        const bostonThemeClass = bostonRowClassMap[teamFilter] || 'boston-bruins';
+
+        if (recent.length > 0) {
+          const rowsHtml = recent.map(r => {
+            const shortDate = r.date
+              ? new Date(r.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })
+              : '';
+            const outcomeClass = r.outcome === 'W' ? 'outcome-w' : (r.outcome === 'OTL' ? 'outcome-otl' : 'outcome-l');
+            return `
+              <div class="result-row">
+                <div class="result-left">
+                  <span class="outcome-pill ${outcomeClass}">${r.outcome}</span>
+                  <div>
+                    <div class="result-matchup">${r.matchupLabel}</div>
+                    <div class="result-date">${shortDate}</div>
+                  </div>
+                </div>
+                <div class="result-right">
+                  <div class="result-score">${r.scoreLabel}</div>
+                  <div class="result-detail">${r.statusDetail}</div>
+                </div>
+              </div>
+            `;
+          }).join('');
+
+          extraSectionsHtml += `
+            <div class="section-title">Last 3 Results</div>
+            <div class="card">
+              <div class="results-list">${rowsHtml}</div>
+            </div>
+          `;
+        }
+
+        if (standings && Array.isArray(standings.rows) && standings.rows.length > 0) {
+          const isNhl = standings.format === 'nhl';
+          const theadHtml = isNhl
+            ? `
+                  <tr>
+                    <th>Team</th>
+                    <th>GP</th>
+                    <th>W-L-OT</th>
+                    <th>PTS</th>
+                    <th>DIFF</th>
+                    <th>STRK</th>
+                  </tr>`
+            : `
+                  <tr>
+                    <th>Team</th>
+                    <th>W-L</th>
+                    <th>PCT</th>
+                    <th>GB</th>
+                    <th>DIFF</th>
+                    <th>STRK</th>
+                  </tr>`;
+
+          const tableRowsHtml = standings.rows.map(row => {
+            const rowClass = row.isBoston ? `is-boston ${bostonThemeClass}` : '';
+            if (isNhl) {
+              return `
+                <tr class="${rowClass}">
+                  <td><span class="standings-rank">${row.rank}</span>${row.team}</td>
+                  <td>${row.gp}</td>
+                  <td>${row.w}-${row.l}-${row.otl}</td>
+                  <td style="font-weight: 700;">${row.ptsDisplay}</td>
+                  <td>${row.diff}</td>
+                  <td>${row.strk}</td>
+                </tr>
+              `;
+            }
+            return `
+              <tr class="${rowClass}">
+                <td><span class="standings-rank">${row.rank}</span>${row.team}</td>
+                <td style="font-weight: 700;">${row.record}</td>
+                <td>${row.pctDisplay}</td>
+                <td>${row.gb}</td>
+                <td>${row.diff}</td>
+                <td>${row.strk}</td>
+              </tr>
+            `;
+          }).join('');
+
+          extraSectionsHtml += `
+            <div class="section-title">${standings.divisionName} Standings</div>
+            <div class="card" style="padding: 14px 12px;">
+              <table class="standings-table">
+                <thead>${theadHtml}
+                </thead>
+                <tbody>
+                  ${tableRowsHtml}
+                </tbody>
+              </table>
+            </div>
+          `;
+        }
+      }
+
+      container.innerHTML = gamesHtml + extraSectionsHtml;
 
     }
 
@@ -443,7 +802,7 @@
           headers: { 'Cache-Control': 'no-cache' }
         });
         teamsPayload = await res.json();
-        renderView('All');
+        renderView(activeFilter);
         updateSyncTime();
       } catch (err) {
         container.innerHTML = `
@@ -459,7 +818,8 @@
       btn.addEventListener('click', () => {
         filterButtons.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
-        renderView(btn.dataset.team);
+        activeFilter = btn.dataset.team;
+        renderView(activeFilter);
       });
     });
 
