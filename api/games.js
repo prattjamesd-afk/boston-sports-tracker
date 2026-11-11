@@ -95,8 +95,46 @@ export default async function handler(req, res) {
     return validNetworks.join(', ');
   }
 
+  // Calendar date (YYYY-MM-DD) in Eastern time, used to match ESPN (UTC) games to Celtics.com (ET) games
+  function easternDate(date) {
+    return new Intl.DateTimeFormat('en-CA', {
+      timeZone: 'America/New_York', year: 'numeric', month: '2-digit', day: '2-digit'
+    }).format(new Date(date));
+  }
+
+  // Celtics.com publishes its own schedule with confirmed TV assignments (incl. NBC Sports Boston),
+  // which ESPN no longer carries. Returns Map<ET date, string[] of TV networks>, or null on failure.
+  async function fetchCelticsBroadcasts() {
+    const [year, month] = easternDate(new Date()).split('-').map(Number);
+    const seasonYear = month >= 7 ? year : year - 1; // season starting in fall
+    try {
+      const res = await fetch(`https://cdn.celtics.com/api/schedule/${seasonYear}_celtics_schedule.json`);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const json = await res.json();
+      const games = json?.data?.gscd?.g;
+      if (!Array.isArray(games)) throw new Error('Unexpected schedule format');
+
+      const byDate = new Map();
+      for (const g of games) {
+        if (!g?.gdte) continue;
+        const celticsSide = g.h?.ta === 'BOS' ? 'home' : 'away';
+        const tv = (g.bd?.b || [])
+          .filter(b => b?.type === 'tv' && b.disp && (b.scope === 'natl' || b.scope === celticsSide))
+          .sort((a, b) => (a.scope === 'natl' ? 0 : 1) - (b.scope === 'natl' ? 0 : 1) || a.seq - b.seq)
+          .map(b => (b.disp === 'NBC Sports Network' ? 'NBCSN' : b.disp));
+        byDate.set(g.gdte, [...new Set(tv)]);
+      }
+      return byDate;
+    } catch (e) {
+      console.error('Celtics.com broadcast feed unavailable, falling back to ESPN:', e.message);
+      return null;
+    }
+  }
+
   try {
     const fetchPromises = TEAMS.map(async (team) => {
+      const celticsBroadcasts = team.name === 'Celtics' ? await fetchCelticsBroadcasts() : null;
+
       const baseUrl = `https://site.api.espn.com/apis/site/v2/sports/${team.league}/teams/${team.id}/schedule`;
       let response = await fetch(baseUrl);
       let data = await response.json();
@@ -159,12 +197,17 @@ export default async function handler(req, res) {
 
         console.log(`Raw API networks for ${team.name}:`, networks);
 
+        // Celtics: prefer confirmed TV listings from Celtics.com (national + NBCSB simulcasts)
+        const confirmedCeltics = celticsBroadcasts?.get(easternDate(evt.date));
+
         // Resolve exact broadcast label based on confirmed API data
-        const finalBroadcast = prioritizeLocalBroadcast(
-          networks, 
-          team.name,
-          team.name === 'Red Sox' && isPostseason
-        );
+        const finalBroadcast = confirmedCeltics?.length
+          ? confirmedCeltics.join(', ')
+          : prioritizeLocalBroadcast(
+              networks,
+              team.name,
+              team.name === 'Red Sox' && isPostseason
+            );
 
         const gameState = evt?.status?.type?.state || evt?.competitions?.[0]?.status?.type?.state || 'pre';
 
