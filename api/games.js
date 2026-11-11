@@ -120,6 +120,7 @@ export default async function handler(req, res) {
         const celticsSide = g.h?.ta === 'BOS' ? 'home' : 'away';
         const tv = (g.bd?.b || [])
           .filter(b => b?.type === 'tv' && b.disp && (b.scope === 'natl' || b.scope === celticsSide))
+          .filter(b => !/telemundo/i.test(b.disp)) // Spanish-language simulcast of NBC games
           .sort((a, b) => (a.scope === 'natl' ? 0 : 1) - (b.scope === 'natl' ? 0 : 1) || a.seq - b.seq)
           .map(b => (b.disp === 'NBC Sports Network' ? 'NBCSN' : b.disp));
         byDate.set(g.gdte, [...new Set(tv)]);
