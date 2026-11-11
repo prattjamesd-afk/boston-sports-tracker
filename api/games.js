@@ -44,6 +44,9 @@ export default async function handler(req, res) {
     const names = [];
     for (const b of broadcastArray) {
       if (!b || typeof b !== 'object') continue;
+      // Skip radio feeds (e.g. ESPN's "ERADM" = ESPN Radio); keep TV and streaming
+      const typeName = b.type?.shortName || b.type?.name || '';
+      if (/radio/i.test(typeName) || String(b.type?.id) === '5') continue;
       if (Array.isArray(b.names)) {
         names.push(...b.names);
       }
