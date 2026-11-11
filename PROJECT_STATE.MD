@@ -2,7 +2,7 @@
 
 ## 1. Core Parameters
 * **Target Platform:** Mobile-first Progressive Web App (PWA)
-* **Tech Stack:** Vanilla HTML/CSS/JS, Vercel Serverless Function (`/api/games.js`), ESPN public API endpoints
+* **Tech Stack:** Vanilla HTML/CSS/JS, Vercel Serverless Function (`/api/games.js`), ESPN public API endpoints, Celtics.com schedule feed (Celtics TV only)
 * **Version Control & CI/CD:** GitHub repository linked to Vercel production branch (`main`)
 * **WIP Limit:** Maximum 2 active items
 
@@ -11,6 +11,7 @@
 ## 2. Kanban Board
 
 ### Live / Shipped
+* **Confirmed Celtics TV Broadcasts via Celtics.com:** ESPN never lists NBC Sports Boston for Celtics games (only national networks and opponents' local feeds), so NBCSB was only guessed by elimination and simulcasts showed the national network alone. `api/games.js` now reads TV assignments from `https://cdn.celtics.com/api/schedule/{seasonYear}_celtics_schedule.json`, matches games on their Eastern-time date, and shows national + NBCSB together (e.g. `NBA TV, NBC Sports Boston`). If the feed is unavailable it falls back to the ESPN-based `NBC Sports Boston*` guess (commit `aed8225`).
 * **Team-Specific Filter Pill & Accent Styling:** Styled active filter pills and card headers to match team colors (Red Sox crimson `#BD3039`, Celtics green `#008348`, Bruins gold `#ffb81c` with dark navy text, and Patriots blue `#1d4ed8` / `#3b82f6`).
 * **iOS Standalone PWA Data Refresh & Cache Busting:** Resolved WebKit standalone caching with `max-age=0, no-cache` headers in `api/games.js`, timestamp query cache-busting (`?_t=`) with live `SYNCED [Time]` indicator in `index.html`, and standalone touch pull-to-refresh gesture handling (commit `ad894d7`).
 * **PWA Standalone App Icons & Polish:** Configured standalone PWA manifest, iOS home screen display, and dark status bar theme styling (commit `40efb71`).
@@ -32,6 +33,8 @@
 ## 3. Current Session Checkpoint
 * **Production State:** Deployed to `https://boston-sports-tracker.vercel.app/` and verified working across macOS Safari, iOS Safari, and iOS Home Screen standalone PWA.
 * **iOS Cache Reset Procedure:** If iOS Safari or the Home Screen PWA ever holds onto an old Service Worker cache after a major update, remove the Home Screen icon, delete `vercel.app` and `vercel.com` under **iPhone Settings -> Apps -> Safari -> Advanced -> Website Data**, reload `https://boston-sports-tracker.vercel.app/` in Safari, and re-add to Home Screen.
+
+* **Broadcast Data Sources:** Red Sox / Bruins / Patriots use ESPN (which carries NESN). Celtics use the Celtics.com feed first; it is an undocumented website file, not a public API, so if Celtics games revert to `NBC Sports Boston*` labels, check Vercel logs for `Celtics.com broadcast feed unavailable`. The season year in the filename is derived automatically (July onward = new season). NBA.com's league schedule feed (`cdn.nba.com`) returns 403 and is not usable.
 
 ## 4. Development Workflow
 * All future code edits across `index.html`, `api/games.js`, `manifest.json`, and `sw.js` are executed via GitHub Copilot Agent mode in VS Code.
